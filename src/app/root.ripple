@@ -1,0 +1,74 @@
+import { Client } from "archipelago.js"
+import { effect, track, type Tracked } from "ripple"
+
+export component Root() {
+	const games = track<string[]>([])
+
+	effect(() => {
+		const client = new Client()
+
+		client.socket.on("receivedPacket", (event) => {
+			console.debug("Received packet:", event)
+		})
+		client.socket.on("roomInfo", (event) => {
+			@games = event.games
+		})
+		client.socket.connect("ws://localhost:38281")
+
+		return () => {
+			if (client.socket.connected) {
+				client.socket.disconnect()
+			} else {
+				client.socket.on("connected", () => {
+					client.socket.disconnect()
+				})
+			}
+		}
+	})
+
+	<div class="h-dvh flex flex-col overflow-clip">
+		<header class="bg-gray-800 p-4 md:hidden">
+			<p>{"mobile header"}</p>
+		</header>
+
+		<div class="flex flex-col flex-1 md:flex-row">
+			<nav class="hidden md:flex flex-col p-4 w-64 bg-gray-800">
+				<p>{"desktop sidebar"}</p>
+			</nav>
+
+			<main class="flex-1 flex flex-col p-4">if (@games.length === 0) {
+				<p>{"Loading games..."}</p>
+			} else {
+				<NewServerForm {games} />
+			}</main>
+		</div>
+	</div>
+}
+
+component NewServerForm({ games }: { games: Tracked<string[]> }) {
+	const game = track(games[0] ?? "")
+	const slotName = track("")
+
+	const handleSubmit = (event: SubmitEvent) => {
+		event.preventDefault()
+		console.log(@game, @slotName)
+	}
+
+	<form class="m-auto max-w-sm grid gap-3" onSubmit={handleSubmit}>
+		<div class="grid gap-1 w-full">
+			<label for="game" class="block text-sm font-medium" value={@game} onInput={(event) => {
+					@game = event.currentTarget.value
+				}}>{"Game"}</label>
+			<select id="game" class="rounded bg-gray-800 border-gray-700 border block w-full px-2.5 py-1.5">for (const game of @games) {
+				<option value={game}>{game}</option>
+			}</select>
+		</div>
+		<div class="grid gap-1 w-full">
+			<label for="slot" class="block text-sm font-medium">{"Slot Name"}</label>
+			<input id="slot" type="text" class="rounded block w-full bg-gray-800 border-gray-700 border px-2.5 py-1.5" value={@slotName} onInput={(event) => {
+					@slotName = event.currentTarget.value
+				}} />
+		</div>
+		<button type="submit" class="bg-primary-800 hover:bg-primary-700 px-3 py-2 rounded transition active:bg-primary-600 active:duration-0">{"Connect"}</button>
+	</form>
+}

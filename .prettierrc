@@ -1,0 +1,8 @@
+{
+	"useTabs": true,
+	"tabWidth": 3,
+	"semi": false,
+	"plugins": ["prettier-plugin-ripple", "prettier-plugin-tailwindcss"],
+	"tailwindStylesheet": "./src/index.css",
+	"tailwindFunctions": ["twMerge"]
+}

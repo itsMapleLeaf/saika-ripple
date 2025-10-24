@@ -10,5 +10,7 @@
 		"jsxImportSource": "ripple",
 		"noEmit": true,
 		"isolatedModules": true
-	}
+	},
+	"include": ["**/*.tsx", "src/**/*.ripple"],
+	"exclude": ["**/node_modules/**", "**/dist/**"]
 }

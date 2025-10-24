@@ -60,19 +60,14 @@ component NewServerForm({ games }: { games: Tracked<string[]> }) {
 
 	<form class="m-auto max-w-sm grid gap-3" onSubmit={handleSubmit}>
 		<div class="grid gap-1 w-full">
-			<label
-				for="game"
-				class="block text-sm font-medium"
+			<label for="game" class="block text-sm font-medium">{"Game"}</label>
+			<select
+				id="game"
+				class="rounded bg-gray-800 border-gray-700 border block w-full px-2.5 py-1.5"
 				value={@game}
 				onInput={(event) => {
 					@game = (event.currentTarget as HTMLInputElement).value
 				}}
-			>
-				{"Game"}
-			</label>
-			<select
-				id="game"
-				class="rounded bg-gray-800 border-gray-700 border block w-full px-2.5 py-1.5"
 			>
 				for (const game of @games) {
 					<option value={game}>{game}</option>

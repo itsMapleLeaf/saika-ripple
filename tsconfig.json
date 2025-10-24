@@ -11,6 +11,6 @@
 		"noEmit": true,
 		"isolatedModules": true
 	},
-	"include": ["**/*.tsx", "src/**/*.ripple"],
+	"include": ["**/*", "src/**/*.ripple"],
 	"exclude": ["**/node_modules/**", "**/dist/**"]
 }

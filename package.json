@@ -17,19 +17,19 @@
 	},
 	"license": "MIT",
 	"devDependencies": {
-		"@tailwindcss/vite": "^4.1.12",
-		"eslint": "^9.0.0",
-		"eslint-plugin-ripple": "^0.2.116",
+		"@tailwindcss/vite": "^4.1.16",
+		"eslint": "^9.38.0",
+		"eslint-plugin-ripple": "^0.2.140",
 		"prettier": "^3.6.2",
-		"prettier-plugin-ripple": "^0.2.116",
-		"prettier-plugin-tailwindcss": "^0.6.14",
-		"tailwindcss": "^4.1.12",
+		"prettier-plugin-ripple": "^0.2.140",
+		"prettier-plugin-tailwindcss": "^0.7.1",
+		"tailwindcss": "^4.1.16",
 		"typescript": "^5.9.2",
-		"vite": "^7.1.4",
-		"vite-plugin-ripple": "^0.2.116"
+		"vite": "^7.1.12",
+		"vite-plugin-ripple": "^0.2.140"
 	},
 	"dependencies": {
 		"archipelago.js": "^2.0.4",
-		"ripple": "^0.2.116"
+		"ripple": "^0.2.140"
 	}
 }

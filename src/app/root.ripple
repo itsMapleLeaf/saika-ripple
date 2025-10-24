@@ -12,7 +12,8 @@ export component Root() {
 		})
 		client.socket.on("roomInfo", (event) => {
 			untrack(() => {
-				@games = event.games
+				// you can't connect with the Archipelago game
+				@games = event.games.filter((g) => g !== "Archipelago").sort()
 			})
 		})
 		client.socket.connect("ws://localhost:38281")

@@ -14,7 +14,7 @@ export function trackStored({
 	})
 
 	effect(() => {
-		localStorage.setItem(@key, @internal) ?? ""
+		localStorage.setItem(@key, @internal ?? "")
 	})
 
 	return internal

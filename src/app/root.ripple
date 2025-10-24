@@ -1,5 +1,6 @@
 import { Client } from "archipelago.js"
 import { untrack, effect, track, type Tracked } from "ripple"
+import { trackStored } from "../lib/helpers.ripple"
 
 export component Root() {
 	const games = track<string[]>([])
@@ -51,8 +52,8 @@ export component Root() {
 }
 
 component NewServerForm({ games }: { games: Tracked<string[]> }) {
-	const game = track(@games[0] ?? "")
-	const slotName = track("")
+	const game = trackStored({ key: `lastGame`, fallback: @games[0] ?? "" })
+	const slotName = trackStored({ key: game })
 
 	const handleSubmit = (event: SubmitEvent) => {
 		event.preventDefault()

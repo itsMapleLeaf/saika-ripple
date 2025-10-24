@@ -1,0 +1,21 @@
+import { effect, track, type Tracked } from "ripple"
+
+export function trackStored({
+	key,
+	fallback = "",
+}: {
+	key: Tracked<string> | string;
+	fallback?: string;
+}) {
+	const internal = track(fallback)
+
+	effect(() => {
+		@internal = localStorage.getItem(@key) ?? fallback
+	})
+
+	effect(() => {
+		localStorage.setItem(@key, @internal) ?? ""
+	})
+
+	return internal
+}

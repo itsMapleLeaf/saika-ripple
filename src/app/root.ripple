@@ -1,100 +1,146 @@
 import { Client } from "archipelago.js"
-import { untrack, effect, track, type Tracked } from "ripple"
+import { untrack, track } from "ripple"
 import { trackStored } from "../lib/helpers.ripple"
+import { Button, InputField, SelectField } from "./ui.ripple"
+import { archipelagoEffect, type ServerDetails, type PlayerDetails } from "../lib/archipelago.ripple"
+import { Tracker } from "./tracker.ripple"
 
 export component Root() {
-	const games = track<string[]>([])
+	const server = track<ServerDetails>()
+	const player = track<PlayerDetails>()
 
-	effect(() => {
-		const client = new Client()
-
-		client.socket.on("receivedPacket", (event) => {
-			console.debug("Received packet:", event)
-		})
-		client.socket.on("roomInfo", (event) => {
-			untrack(() => {
-				// you can't connect with the Archipelago game
-				@games = event.games.filter((g) => g !== "Archipelago").sort()
-			})
-		})
-		client.socket.connect("ws://localhost:38281")
-
-		return () => {
-			if (client.socket.connected) {
-				client.socket.disconnect()
-			} else {
-				client.socket.on("connected", () => {
-					client.socket.disconnect()
-				})
-			}
-		}
-	})
-
-	<div class="h-dvh flex flex-col overflow-clip">
+	<div class="h-dvh flex flex-col min-h-0 overflow-clip">
 		<header class="bg-gray-800 p-4 md:hidden">
 			<p>{"mobile header"}</p>
 		</header>
 
-		<div class="flex flex-col flex-1 md:flex-row">
+		<div class="flex flex-col flex-1 h-full md:flex-row">
 			<nav class="hidden md:flex flex-col p-4 w-64 bg-gray-800">
 				<p>{"desktop sidebar"}</p>
 			</nav>
 
-			<main class="flex-1 flex flex-col p-4">
-				if (@games.length === 0) {
-					<p>{"Loading games..."}</p>
+			<main class="flex-1">
+				if (@server == null) {
+					<ServerForm onSubmit={(submission) => @server = submission} />
+				} else if (@player == null) {
+					<PlayerForm
+						{@server}
+						onSubmit={(submission) => @player = submission}
+					/>
 				} else {
-					<NewServerForm {games} />
+					<Tracker {@server} {@player} />
 				}
 			</main>
 		</div>
 	</div>
 }
 
-component NewServerForm({ games }: { games: Tracked<string[]> }) {
-	const game = trackStored({ key: `lastGame`, fallback: @games[0] ?? "" })
-	const slotName = trackStored({ key: game })
+component ServerForm(props: {
+	onSubmit: (inputs: ServerDetails) => void;
+}) {
+	const address = trackStored({ key: "ServerForm:address" })
+	const password = trackStored({ key: `ServerForm:password` })
 
-	const handleSubmit = (event: SubmitEvent) => {
-		event.preventDefault()
-		console.log(@game, @slotName)
-	}
+	<div class="h-full grid place-items-center content-center p-4">
+		<h1
+			class="text-3xl font-light text-center text-pretty text-gray-400 my-6"
+		>
+			{"Connect to Server"}
+		</h1>
 
-	<form class="m-auto max-w-sm grid gap-3" onSubmit={handleSubmit}>
-		<div class="grid gap-1 w-full">
-			<label for="game" class="block text-sm font-medium">{"Game"}</label>
-			<select
-				id="game"
-				class="rounded bg-gray-800 border-gray-700 border block w-full px-2.5 py-1.5"
-				value={@game}
+		<form
+			class="max-w-sm w-full grid gap-3"
+			onSubmit={(event: SubmitEvent) => {
+				event.preventDefault()
+				props.onSubmit({ address: @address, password: @password })
+			}}
+		>
+			<InputField
+				label="Address"
+				placeholder="archipelago.gg:42069"
+				required
+				value={@address}
 				onInput={(event) => {
-					@game = (event.currentTarget as HTMLInputElement).value
-				}}
-			>
-				for (const game of @games) {
-					<option value={game}>{game}</option>
-				}
-			</select>
-		</div>
-		<div class="grid gap-1 w-full">
-			<label for="slot" class="block text-sm font-medium">
-				{"Slot Name"}
-			</label>
-			<input
-				id="slot"
-				type="text"
-				class="rounded block w-full bg-gray-800 border-gray-700 border px-2.5 py-1.5"
-				value={@slotName}
-				onInput={(event) => {
-					@slotName = (event.currentTarget as HTMLInputElement).value
+					@address = (event.currentTarget as HTMLInputElement).value
 				}}
 			/>
-		</div>
-		<button
-			type="submit"
-			class="bg-primary-800 hover:bg-primary-700 px-3 py-2 rounded transition active:bg-primary-600 active:duration-0"
-		>
-			{"Connect"}
-		</button>
-	</form>
+			<InputField
+				label="Password"
+				placeholder="••••••••"
+				value={@password}
+				onInput={(event) => {
+					@password = (event.currentTarget as HTMLInputElement).value
+				}}
+			/>
+			<Button type="submit">{"Connect"}</Button>
+		</form>
+	</div>
+}
+
+component PlayerForm(props: {
+	server: ServerDetails;
+	onSubmit: (inputs: PlayerDetails) => void;
+}) {
+	const games = track<string[]>()
+
+	archipelagoEffect(
+		{
+			server: track(() => props.server),
+			setup: (client) => {
+				client.socket.on("receivedPacket", (event) => {
+					console.debug("Received packet:", event)
+				})
+				client.socket.on("roomInfo", (event) => {
+					untrack(() => {
+						// you can't connect as the Archipelago game
+						@games = event.games.filter((g) => g !== "Archipelago").sort()
+					})
+				})
+			},
+		},
+	)
+
+	<div class="h-full grid place-items-center content-center p-4">
+		if (@games == null) {
+			<p>{"Connecting..."}</p>
+		} else if (!@games[0]) {
+			<p>{"Error: No games found"}</p>
+		} else {
+			const game = trackStored({ key: `lastGame`, fallback: @games[0] })
+			const name = trackStored({ key: `lastPlayerName:${game}` })
+
+			<h1
+				class="text-3xl font-light text-center text-pretty text-gray-400 my-6"
+			>
+				{"Enter Slot Details"}
+			</h1>
+
+			<form
+				class="max-w-sm w-full grid gap-3"
+				onSubmit={(event: SubmitEvent) => {
+					event.preventDefault()
+					props.onSubmit({ game: @game, name: @name })
+				}}
+			>
+				<SelectField
+					label="Game"
+					options={@games}
+					value={@game}
+					onInput={(event) => {
+						@game = (event.currentTarget as HTMLInputElement).value
+					}}
+				/>
+				<InputField
+					label="Name"
+					placeholder="IJustLostTheGame"
+					required
+					value={@name}
+					onInput={(event) => {
+						@name = (event.currentTarget as HTMLInputElement).value
+					}}
+				/>
+				<Button type="submit">{"Enter"}</Button>
+			</form>
+		}
+	</div>
 }

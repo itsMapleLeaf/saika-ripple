@@ -1,0 +1,59 @@
+import { Client } from "archipelago.js"
+import { untrack, TrackedArray, effect, track, type Tracked } from "ripple"
+import { trackStored } from "../lib/helpers.ripple"
+import { Button, InputField, SelectField } from "./ui.ripple"
+import { archipelagoEffect, type ServerDetails, type PlayerDetails } from "../lib/archipelago.ripple"
+
+export component Tracker(props: {
+	server: ServerDetails;
+	player: PlayerDetails;
+}) {
+	const connecting = track(true)
+	const itemCount = track(0)
+	const locationCount = track(0)
+	const messages: TrackedArray<string> = #[]
+
+	archipelagoEffect(
+		{
+			server: track(() => props.server),
+			player: track(() => props.player),
+			setup: (client) => {
+				client.socket.on("receivedPacket", (event) => {
+					console.debug("Received packet:", event)
+				})
+
+				client.socket.on("connected", (event) => {
+					@connecting = false
+					@locationCount = event.missing_locations.length +
+						event.checked_locations.length
+				})
+
+				client.socket.on("receivedItems", (event) => {
+					@itemCount = event.items.length
+				})
+
+				client.socket.on("printJSON", (event) => {
+					messages.push(event.data.map((part) => part.text).join(""))
+				})
+			},
+		},
+	)
+
+	<div class="h-full min-h-0 flex flex-col py-2 px-3 gap-2">
+		<header>
+			if (@connecting) {
+				<p>{"Connecting..."}</p>
+			}
+			<p>{`Items: ${@itemCount}`}</p>
+			<p>{`Locations: ${@locationCount}`}</p>
+		</header>
+
+		<main class="flex-1 min-h-0 overflow-y-auto">
+			<ul class="h-[200dvh]">
+				for (const message of messages) {
+					<li>{message}</li>
+				}
+			</ul>
+		</main>
+	</div>
+}

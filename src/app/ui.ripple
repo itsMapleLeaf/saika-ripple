@@ -1,0 +1,64 @@
+import { Client } from "archipelago.js"
+import { untrack, effect, track, type Tracked } from "ripple"
+import { trackStored } from "../lib/helpers.ripple"
+
+export component Button(props: JSX.IntrinsicElements["button"]) {
+	<button
+		{...props}
+		class={`bg-primary-800 hover:bg-primary-700 px-3 py-2 rounded transition active:bg-primary-600 active:duration-0 ${props.class}`}
+	>
+		<props.children />
+	</button>
+}
+
+export component InputField({
+	label,
+	...props
+}: JSX.IntrinsicElements["input"] & {
+	label: string;
+}) {
+	const id = `InputField:${Math.random()}`
+	<div class="grid gap-1 w-full">
+		<label for={props.id ?? id} class="block text-sm font-medium">
+			{label}
+		</label>
+		<input
+			{...props}
+			id={props.id ?? id}
+			class={`rounded block w-full bg-gray-800 border-gray-700 border px-2.5 py-1.5 ${props.class}`}
+		/>
+	</div>
+}
+
+export component SelectField({
+	label,
+	options,
+	...props
+}: JSX.IntrinsicElements["select"] & {
+	label: string;
+	options: (string | { text: string; value: string })[];
+}) {
+	const id = `InputField:${Math.random()}`
+
+	<div class="grid gap-1 w-full">
+		<label for={props.id ?? id} class="block text-sm font-medium">
+			{label}
+		</label>
+		<select
+			{...props}
+			id={props.id ?? id}
+			class={`rounded block w-full bg-gray-800 border-gray-700 border px-2.5 py-1.5 ${props.class}`}
+		>
+			const normalizedOptions = track(
+				() => options.map(
+					(opt) => typeof opt === "string"
+						? { text: opt, value: opt }
+						: opt,
+				),
+			)
+			for (const { value, text } of @normalizedOptions) {
+				<option {value}>{text}</option>
+			}
+		</select>
+	</div>
+}

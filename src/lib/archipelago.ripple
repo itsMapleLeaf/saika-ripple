@@ -1,0 +1,54 @@
+import { Client } from "archipelago.js"
+import { effect } from "ripple"
+import type { Tracked } from "ripple"
+
+export type ServerDetails = Readonly<{
+	address: string;
+	password: string;
+}>
+
+export type PlayerDetails = Readonly<{
+	game: string;
+	name: string;
+}>
+
+export function archipelagoEffect({
+	server,
+	player,
+	setup,
+}: {
+	server: Tracked<ServerDetails | undefined>;
+	player: Tracked<PlayerDetails | undefined>;
+	setup: (client: Client) => void;
+}) {
+	effect(() => {
+		const client = new Client()
+		setup(client)
+
+		if (@server && @player) {
+			client.login(
+				@server.address,
+				@player.name,
+				@player.game,
+				{
+					password: @server.password,
+					version: { major: 0, minor: 6, build: 0 },
+				},
+			)
+		} else if (@server) {
+			client.socket.connect(@server.address)
+		} else {
+			return
+		}
+
+		return () => {
+			if (client.socket.connected) {
+				client.socket.disconnect()
+			} else {
+				client.socket.on("connected", () => {
+					client.socket.disconnect()
+				})
+			}
+		}
+	})
+}
